@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cashflow Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f5f5f7;
+            color: #333;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        .header {
+            padding: 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .period-selector {
+            display: flex;
+            gap: 8px;
+            margin-top: 16px;
+        }
+
+        .period-btn {
+            padding: 8px 16px;
+            background: rgba(255,255,255,0.2);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .period-btn.active {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .period-btn:hover {
+            background: rgba(255,255,255,0.25);
+        }
+
+        .summary {
+            padding: 24px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .summary-card {
+            padding: 20px;
+            background: #f8f9ff;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .summary-value {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .summary-label {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .surplus {
+            color: #22c55e;
+        }
+
+        .deficit {
+            color: #ef4444;
+        }
+
+        .savings-rate {
+            color: #22c55e;
+        }
+
+        .chart-container {
+            padding: 0 24px 24px;
+        }
+
+        .chart {
+            display: flex;
+            height: 200px;
+            gap: 40px;
+            align-items: flex-end;
+            justify-content: center;
+        }
+
+        .bar {
+            width: 80px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .bar-fill {
+            width: 100%;
+            border-radius: 6px 6px 0 0;
+            transition: height 0.3s ease;
+        }
+
+        .income-bar {
+            background: #22c55e;
+        }
+
+        .expense-bar {
+            background: linear-gradient(to top, #ef4444 0%, #f97316 50%, #eab308 100%);
+        }
+
+        .bar-label {
+            margin-top: 8px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .breakdown {
+            padding: 24px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .breakdown-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .breakdown-title {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .add-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #22c55e;
+            border: none;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .add-btn:hover {
+            background: #16a34a;
+        }
+
+        .totals {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .total-card {
+            padding: 16px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .income-total {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .expense-total {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .total-amount {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .total-label {
+            font-size: 14px;
+            margin-top: 4px;
+        }
+
+        .breakdown-list {
+            display: grid;
+            gap: 12px;
+        }
+
+        .breakdown-section {
+            margin-bottom: 24px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .breakdown-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: #f9fafb;
+            border-radius: 8px;
+        }
+
+        .item-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .item-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .income-dot {
+            background: #22c55e;
+        }
+
+        .expense-dot {
+            background: #ef4444;
+        }
+
+        .item-name {
+            font-weight: 500;
+        }
+
+        .item-frequency {
+            font-size: 12px;
+            color: #666;
+            margin-left: 8px;
+        }
+
+        .item-amount {
+            font-weight: 600;
+        }
+
+        .item-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-btn {
+            padding: 4px 8px;
+            border: none;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .edit-btn {
+            background: #e5e7eb;
+            color: #374151;
+        }
+
+        .delete-btn {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 400px;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .form-input, .form-select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background: #22c55e;
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #e5e7eb;
+            color: #374151;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Cashflow</h1>
+            <div class="period-selector">
+                <button class="period-btn" data-period="weekly">Weekly</button>
+                <button class="period-btn" data-period="monthly">Monthly</button>
+                <button class="period-btn active" data-period="annually">Annually</button>
+            </div>
+        </div>
+
+        <div class="summary">
+            <div class="summary-card">
+                <div class="summary-value surplus" id="surplus">$0</div>
+                <div class="summary-label">Annual Surplus</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-value savings-rate" id="savingsRate">0%</div>
+                <div class="summary-label">Savings Rate</div>
+            </div>
+        </div>
+
+        <div class="chart-container">
+            <div class="chart">
+                <div class="bar">
+                    <div class="bar-fill income-bar" id="incomeBar" style="height: 0px;"></div>
+                    <div class="bar-label">Income</div>
+                </div>
+                <div class="bar">
+                    <div class="bar-fill expense-bar" id="expenseBar" style="height: 0px;"></div>
+                    <div class="bar-label">Expenses</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="breakdown">
+            <div class="breakdown-header">
+                <h2 class="breakdown-title">Breakdown</h2>
+                <button class="add-btn" onclick="openModal()">+</button>
+            </div>
+
+            <div class="totals">
+                <div class="total-card income-total">
+                    <div class="total-amount" id="totalIncome">$0</div>
+                    <div class="total-label">Incomes</div>
+                </div>
+                <div class="total-card expense-total">
+                    <div class="total-amount" id="totalExpenses">$0</div>
+                    <div class="total-label">Expenses</div>
+                </div>
+            </div>
+
+            <div class="breakdown-section">
+                <div class="section-header">
+                    <h3 class="section-title">Income Sources</h3>
+                    <button class="add-btn" onclick="openModal('income')" style="width: 24px; height: 24px; font-size: 14px;">+</button>
+                </div>
+                <div id="incomeList" class="breakdown-list">
+                    <!-- Income items will be populated here -->
+                </div>
+            </div>
+
+            <div class="breakdown-section">
+                <div class="section-header">
+                    <h3 class="section-title">Expenses</h3>
+                    <button class="add-btn" onclick="openModal('expense')" style="width: 24px; height: 24px; font-size: 14px;">+</button>
+                </div>
+                <div id="expenseList" class="breakdown-list">
+                    <!-- Expense items will be populated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <h3 class="modal-title" id="modalTitle">Add Item</h3>
+            <form id="itemForm">
+                <div class="form-group">
+                    <label class="form-label">Type</label>
+                    <select class="form-select" id="itemType">
+                        <option value="income">Income</option>
+                        <option value="expense">Expense</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Name</label>
+                    <input type="text" class="form-input" id="itemName" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Amount</label>
+                    <input type="number" class="form-input" id="itemAmount" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Frequency</label>
+                    <select class="form-select" id="itemFrequency">
+                        <option value="weekly">Weekly</option>
+                        <option value="monthly">Monthly</option>
+                        <option value="quarterly">Quarterly</option>
+                        <option value="halfyearly">Half Yearly</option>
+                        <option value="annually">Annually</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Data storage (in memory - replace with localStorage in your environment)
+        let data = {
+            incomes: [],
+            expenses: []
+        };
+
+        let currentPeriod = 'annually';
+        let editingItem = null;
+
+        // Frequency multipliers to convert to annual
+        const frequencyMultipliers = {
+            weekly: 52,
+            monthly: 12,
+            quarterly: 4,
+            halfyearly: 2,
+            annually: 1
+        };
+
+        // Period display multipliers
+        const periodMultipliers = {
+            weekly: 1/52,
+            monthly: 1/12,
+            annually: 1
+        };
+
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load data from localStorage if available (uncomment in your environment)
+            // const savedData = localStorage.getItem('cashflowData');
+            // if (savedData) {
+            //     data = JSON.parse(savedData);
+            // }
+
+            // Add some sample data
+            data.incomes = [
+                { id: 1, name: 'Salary', amount: 24000, frequency: 'annually' },
+            ];
+            data.expenses = [
+                { id: 1, name: 'Rent/Mortgage', amount: 500, frequency: 'monthly' },
+                { id: 2, name: 'Healthcare', amount: 200, frequency: 'monthly' },
+            ];
+
+            updateDisplay();
+            setupEventListeners();
+        });
+
+        function setupEventListeners() {
+            // Period selector buttons
+            document.querySelectorAll('.period-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelector('.period-btn.active').classList.remove('active');
+                    this.classList.add('active');
+                    currentPeriod = this.dataset.period;
+                    updateDisplay();
+                });
+            });
+
+            // Form submission
+            document.getElementById('itemForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                saveItem();
+            });
+        }
+
+        function openModal(type = null, item = null) {
+            const modal = document.getElementById('modal');
+            const form = document.getElementById('itemForm');
+            const title = document.getElementById('modalTitle');
+            
+            if (item) {
+                // Editing existing item
+                editingItem = item;
+                title.textContent = 'Edit Item';
+                document.getElementById('itemType').value = item.type;
+                document.getElementById('itemName').value = item.name;
+                document.getElementById('itemAmount').value = item.amount;
+                document.getElementById('itemFrequency').value = item.frequency;
+            } else {
+                // Adding new item
+                editingItem = null;
+                title.textContent = 'Add Item';
+                form.reset();
+                if (type) {
+                    document.getElementById('itemType').value = type;
+                }
+            }
+            
+            modal.classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('modal').classList.remove('active');
+            editingItem = null;
+        }
+
+        function saveItem() {
+            const type = document.getElementById('itemType').value;
+            const name = document.getElementById('itemName').value;
+            const amount = parseFloat(document.getElementById('itemAmount').value);
+            const frequency = document.getElementById('itemFrequency').value;
+
+            if (editingItem) {
+                // Update existing item
+                const list = editingItem.type === 'income' ? data.incomes : data.expenses;
+                const index = list.findIndex(item => item.id === editingItem.id);
+                if (index !== -1) {
+                    list[index] = { ...editingItem, type, name, amount, frequency };
+                }
+            } else {
+                // Add new item
+                const newItem = {
+                    id: Date.now(),
+                    type,
+                    name,
+                    amount,
+                    frequency
+                };
+
+                if (type === 'income') {
+                    data.incomes.push(newItem);
+                } else {
+                    data.expenses.push(newItem);
+                }
+            }
+
+            saveData();
+            updateDisplay();
+            closeModal();
+        }
+
+        function deleteItem(type, id) {
+            if (confirm('Are you sure you want to delete this item?')) {
+                if (type === 'income') {
+                    data.incomes = data.incomes.filter(item => item.id !== id);
+                } else {
+                    data.expenses = data.expenses.filter(item => item.id !== id);
+                }
+                saveData();
+                updateDisplay();
+            }
+        }
+
+        function saveData() {
+            // Save to localStorage (uncomment in your environment)
+            // localStorage.setItem('cashflowData', JSON.stringify(data));
+        }
+
+        function convertToAnnual(amount, frequency) {
+            return amount * frequencyMultipliers[frequency];
+        }
+
+        function convertToPeriod(annualAmount, period) {
+            return annualAmount * periodMultipliers[period];
+        }
+
+        function updateDisplay() {
+            // Calculate totals
+            const totalAnnualIncome = data.incomes.reduce((sum, item) => 
+                sum + convertToAnnual(item.amount, item.frequency), 0);
+            
+            const totalAnnualExpenses = data.expenses.reduce((sum, item) => 
+                sum + convertToAnnual(item.amount, item.frequency), 0);
+
+            const surplus = totalAnnualIncome - totalAnnualExpenses;
+            const savingsRate = totalAnnualIncome > 0 ? (surplus / totalAnnualIncome * 100) : 0;
+
+            // Convert to current period for display
+            const periodIncome = convertToPeriod(totalAnnualIncome, currentPeriod);
+            const periodExpenses = convertToPeriod(totalAnnualExpenses, currentPeriod);
+            const periodSurplus = convertToPeriod(surplus, currentPeriod);
+
+            // Update summary
+            document.getElementById('surplus').textContent = formatCurrency(periodSurplus);
+            document.getElementById('surplus').className = `summary-value ${surplus >= 0 ? 'surplus' : 'deficit'}`;
+            document.getElementById('savingsRate').textContent = `${Math.round(savingsRate)}%`;
+
+            // Update totals
+            document.getElementById('totalIncome').textContent = formatCurrency(periodIncome);
+            document.getElementById('totalExpenses').textContent = formatCurrency(periodExpenses);
+
+            // Update chart
+            const maxAmount = Math.max(periodIncome, periodExpenses);
+            const maxHeight = 180;
+            
+            const incomeHeight = maxAmount > 0 ? (periodIncome / maxAmount) * maxHeight : 0;
+            const expenseHeight = maxAmount > 0 ? (periodExpenses / maxAmount) * maxHeight : 0;
+            
+            document.getElementById('incomeBar').style.height = `${incomeHeight}px`;
+            document.getElementById('expenseBar').style.height = `${expenseHeight}px`;
+
+            // Update breakdown lists
+            updateBreakdownList('income', data.incomes);
+            updateBreakdownList('expense', data.expenses);
+
+            // Update period labels
+            const periodLabel = currentPeriod.charAt(0).toUpperCase() + currentPeriod.slice(1);
+            document.querySelector('.summary-card:first-child .summary-label').textContent = `${periodLabel} Surplus`;
+        }
+
+        function updateBreakdownList(type, items) {
+            const container = document.getElementById(`${type}List`);
+            container.innerHTML = '';
+
+            items.forEach(item => {
+                const annualAmount = convertToAnnual(item.amount, item.frequency);
+                const displayAmount = convertToPeriod(annualAmount, currentPeriod);
+                
+                const itemElement = document.createElement('div');
+                itemElement.className = 'breakdown-item';
+                itemElement.innerHTML = `
+                    <div class="item-info">
+                        <div class="item-dot ${type}-dot"></div>
+                        <span class="item-name">${item.name}</span>
+                        <span class="item-frequency">(${item.frequency})</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <span class="item-amount">${formatCurrency(displayAmount)}</span>
+                        <div class="item-actions">
+                            <button class="action-btn edit-btn" onclick="openModal(null, {...${JSON.stringify(item)}, type: '${type}'})">Edit</button>
+                            <button class="action-btn delete-btn" onclick="deleteItem('${type}', ${item.id})">Delete</button>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(itemElement);
+            });
+
+            if (items.length === 0) {
+                container.innerHTML = `<div style="text-align: center; color: #666; padding: 20px;">No ${type} items added yet</div>`;
+            }
+        }
+
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(amount);
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('modal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+    </script>
+</body>
+</html>
